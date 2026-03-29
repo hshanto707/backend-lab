@@ -2,23 +2,38 @@ import express from "express";
 import redis from "redis";
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
+const redisUrl = process.env.REDIS_URL ?? "redis://127.0.0.1:6379";
+
 const client = redis.createClient({
+  url: redisUrl,
   socket: {
-    reconnectStrategy: 1000,
+    connectTimeout: 10_000,
+    reconnectStrategy: (retries) => Math.min(retries * 100, 3_000),
   },
 });
 
 client.on("error", (err) => console.error("Redis Client Error", err.message));
 
 async function initredis() {
-  try {
-    await client.connect();
-    await client.flushDb();
-    console.log("Connected to Redis");
-  } catch (err) {
-    console.error("Failed to connect to Redis:", err.message);
+  const maxAttempts = 30;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      if (!client.isOpen) {
+        await client.connect();
+      }
+      await client.flushDb();
+      console.log("Connected to Redis");
+      return;
+    } catch (err) {
+      console.error(
+        `Redis connect attempt ${attempt}/${maxAttempts}:`,
+        err.message,
+      );
+      await new Promise((r) => setTimeout(r, 1_000));
+    }
   }
+  console.error("Giving up on Redis after max attempts");
 }
 
 initredis();
