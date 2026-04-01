@@ -77,6 +77,12 @@ app.get("/api/sum", async (req, res) => {
 
   try {
     if (client.isReady) {
+      /*
+        Why putting await here?
+        - Because we want to wait for the cache to be set before returning the response
+        - If we don't put await here, the response will be sent before the cache is set
+        - Without await, the response can go out before the write completes. If we just fire-and-forget, failures can surface as unhandled rejections
+      */
       await client.set(n, sum.toString(), {
         EX: 120, // Cache expires in 120 seconds
       });
