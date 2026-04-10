@@ -26,9 +26,10 @@ async function initredis() {
       console.log("Connected to Redis");
       return;
     } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
       console.error(
         `Redis connect attempt ${attempt}/${maxAttempts}:`,
-        err.message,
+        msg,
       );
       await new Promise((r) => setTimeout(r, 1_000));
     }
@@ -68,7 +69,8 @@ app.get("/api/sum", async (req, res) => {
       }
     }
   } catch (err) {
-    console.error("Redis GET error:", err.message);
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("Redis GET error:", msg);
   }
 
   let sum = 0;
@@ -91,7 +93,8 @@ app.get("/api/sum", async (req, res) => {
       );
     }
   } catch (err) {
-    console.error("Redis SET error:", err.message);
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("Redis SET error:", msg);
   }
 
   res.json({

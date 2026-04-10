@@ -2,17 +2,24 @@
   "name": "dynamic-caching-system",
   "version": "1.0.0",
   "description": "",
-  "main": "server.js",
+  "main": "dist/bootstrap.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js"
+    "start": "node dist/bootstrap.js",
+    "dev": "nodemon --exec tsx watch bootstrap.ts",
+    "build": "tsc",
+    "start:prod": "node dist/bootstrap.js",
+    "dev:docker": "docker compose up -d --build"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "module",
   "devDependencies": {
-    "nodemon": "^3.1.14"
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.5.0",
+    "nodemon": "^3.1.14",
+    "tsx": "^4.21.0",
+    "typescript": "^6.0.2"
   },
   "dependencies": {
     "express": "^5.2.1",
