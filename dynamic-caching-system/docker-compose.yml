@@ -12,6 +12,7 @@ services:
     depends_on:
       redis:
         condition: service_healthy
+    command: npm run dev
     volumes:
       - .:/app
       - /app/node_modules
