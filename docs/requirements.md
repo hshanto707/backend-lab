@@ -9,3 +9,10 @@
 
 ## Requirement 3
 ❌ When the primary DB comes online again all the cache of the secondary DB should by sync with the primary caching DB
+
+---
+
+## Next Tasks:
+➡️ Finish ENV config properly & test
+➡️ If the primary caching DB (e.g. Redis) fails to connect then the secondary DB should cache it (e.g. MongoDB)
+➡️ When the primary DB comes online again all the cache of the secondary DB should by sync with the primary caching DB
