@@ -16,6 +16,7 @@ export class CoreProvider {
     if (CoreProvider.instance) {
       throw new Error("CoreProvider already initialized");
     }
+
     CoreProvider.instance = new CoreProvider(deps);
   }
 
@@ -23,6 +24,7 @@ export class CoreProvider {
     if (!CoreProvider.instance) {
       throw new Error("CoreProvider not initialized");
     }
+    
     return CoreProvider.instance;
   }
 

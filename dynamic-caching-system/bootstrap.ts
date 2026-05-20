@@ -1,53 +1,24 @@
 import express from "express";
-import { createClient } from "redis";
 import BaseRoute from "./src/routes/base.route.js";
 import { CoreProvider } from "./src/providers/core.provider.js";
-import { RedisCacheService } from "./src/adapters/redis-cache.service.js";
+import { CacheType } from "./src/types/cache.types.js";
+import { createCacheService } from "./src/adapters/create-cache.service.js";
 
 const PORT = process.env.PORT || 3000;
-const redisUrl = process.env.REDIS_URL ?? "redis://127.0.0.1:6379";
 
-async function connectRedis(client: ReturnType<typeof createClient>) {
-  const maxAttempts = 30;
-  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    try {
-      if (!client.isOpen) {
-        await client.connect();
-      }
-      await client.flushDb();
-      console.log("Connected to Redis");
-      return;
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      console.error(`Redis connect attempt ${attempt}/${maxAttempts}:`, msg);
-      await new Promise((r) => setTimeout(r, 1_000));
-    }
-  }
-  throw new Error("Giving up on Redis after max attempts");
-}
+/** Switch cache implementation here only. */
+const CACHE_BACKEND = CacheType.Redis;
 
 async function main() {
   const app = express();
 
-  const client = createClient({
-    url: redisUrl,
-    socket: {
-      connectTimeout: 10_000,
-      reconnectStrategy: (retries) => Math.min(retries * 100, 3_000),
-    },
-  });
-
-  client.on("error", (err) => console.error("Redis Client Error", err.message));
-
-  await connectRedis(client);
-
-  const cache = new RedisCacheService(client);
+  const cache = await createCacheService(CACHE_BACKEND);
   CoreProvider.initialize({ cache });
 
   new BaseRoute(app);
 
   let n = "10";
-  cache.set("n", n, 120);
+  await cache.set("n", n, 120);
 
   function calculateNextN() {
     const now = new Date();
@@ -56,12 +27,16 @@ async function main() {
 
     setTimeout(() => {
       n += "0";
-      cache.set("n", n, 120);
+      void cache
+        .set("n", n, 120)
+        .catch((err) => console.error("cache set error:", err));
       console.log(`[${new Date().toLocaleTimeString()}] n updated: ${n}`);
 
       setInterval(() => {
         n += "0";
-        cache.set("n", n, 120);
+        void cache
+          .set("n", n, 120)
+          .catch((err) => console.error("cache set error:", err));
         console.log(`[${new Date().toLocaleTimeString()}] n updated: ${n}`);
       }, 60000);
     }, msToNextMinute);
